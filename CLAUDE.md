@@ -1,10 +1,10 @@
-# APPNAME
+# Orb Cascade
 
 ## Platform: FreeAppStore
 - Hosted on Cloudflare R2 (static SPA, served by host Worker)
 - ONE environment only (production). No dev/staging. Fix forward, no rollbacks.
 - Push to `main` auto-deploys to production via R2
-- Domain: APPNAME.freeappstore.online
+- Domain: Orb Cascade.freeappstore.online
 
 ## Tech Stack
 - TypeScript, React 19, Vite 6, Tailwind CSS 4.1, pnpm
