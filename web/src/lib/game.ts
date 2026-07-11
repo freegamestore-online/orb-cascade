@@ -65,7 +65,7 @@ function spawnBurst(
   particles: Particle[],
   x: number,
   y: number,
-  color: number,
+  _color: number,   // kept for API symmetry; actual tint comes from glowColor
   glowColor: number,
 ) {
   const count = 18;
