@@ -1,0 +1,27 @@
+{
+  "name": "Orb Cascade",
+  "short_name": "Orb Cascade",
+  "description": "A free orb-matching cascade puzzle game on FreeGameStore.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#10b981",
+  "orientation": "any",
+  "min_viewport_width": 320,
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
