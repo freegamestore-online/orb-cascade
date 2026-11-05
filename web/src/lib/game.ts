@@ -246,6 +246,10 @@ export class OrbCascadeGame {
   private pointerTargetX: number | null = null;
   private onKeyDown = (e: KeyboardEvent) => this.onKey(e, true);
   private onKeyUp = (e: KeyboardEvent) => this.onKey(e, false);
+  // keyup never arrives if focus leaves the window mid-press.
+  private onBlur = () => {
+    this.keys = {};
+  };
   private onResize = (w: number, h: number) => {
     for (const s of this.stars) s.gfx.position.set(randomBetween(0, w), randomBetween(0, h));
   };
@@ -327,6 +331,7 @@ export class OrbCascadeGame {
   private setupInput() {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
+    window.addEventListener("blur", this.onBlur);
     this.app.renderer.on("resize", this.onResize);
 
     this.app.stage.eventMode = "static";
@@ -522,8 +527,12 @@ export class OrbCascadeGame {
   private catchOrb(orb: Orb, idx: number) {
     const ci = orb.colorIdx;
     const glowCol = GLOW_COLORS[ci]!;
+    // Read the position before destroy(): Pixi nulls it, and the combo flash
+    // below used to throw there, which stops the ticker (game froze on the
+    // second catch in a row).
+    const { x, y } = orb.container.position;
 
-    spawnBurst(this.fxLayer, this.particles, orb.container.position.x, orb.container.position.y, ORB_COLORS[ci]!, glowCol);
+    spawnBurst(this.fxLayer, this.particles, x, y, ORB_COLORS[ci]!, glowCol);
 
     orb.container.parent?.removeChild(orb.container);
     orb.container.destroy();
@@ -547,7 +556,7 @@ export class OrbCascadeGame {
 
     // Combo flash text
     if (this.combo >= 2) {
-      this.spawnComboFlash(orb.container.position.x, orb.container.position.y, this.combo, glowCol);
+      this.spawnComboFlash(x, y, this.combo, glowCol);
     }
 
     // Screen flash (green tint)
@@ -677,5 +686,6 @@ export class OrbCascadeGame {
     this.app.renderer.off("resize", this.onResize);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
+    window.removeEventListener("blur", this.onBlur);
   }
 }

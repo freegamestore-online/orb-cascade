@@ -160,7 +160,6 @@ export default function App() {
 
   const handleStart = useCallback(() => {
     gameRef.current?.startGame();
-    setIsNewBest(false);
   }, []);
 
   useEffect(() => {
@@ -196,6 +195,8 @@ export default function App() {
         onPhaseChange: (p) => {
           setPhase(p);
           setPaused(false);
+          // Every start path (button, Space/Enter, tap on the field) lands here.
+          if (p === "playing") setIsNewBest(false);
           if (p === "over") {
             audioRef.current?.playGameOver();
             if (scoreRef.current > 0) submitScoreRef.current(scoreRef.current);
