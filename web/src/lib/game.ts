@@ -59,7 +59,6 @@ interface Particle {
   vy: number;
   life: number;
   maxLife: number;
-  color: number;
 }
 
 function spawnBurst(
@@ -67,7 +66,6 @@ function spawnBurst(
   particles: Particle[],
   x: number,
   y: number,
-  _color: number,   // kept for API symmetry; actual tint comes from glowColor
   glowColor: number,
 ) {
   const count = 18;
@@ -86,7 +84,6 @@ function spawnBurst(
       vy: Math.sin(angle) * speed,
       life: 1,
       maxLife: randomBetween(0.45, 0.8),
-      color: glowColor,
     });
   }
 }
@@ -192,7 +189,7 @@ function makeStars(stage: Container, count: number, w: number, h: number): Star[
 // ─── Combo flash ─────────────────────────────────────────────────────────────
 
 interface ComboFlash {
-  gfx: Graphics;
+  txt: Text;
   life: number;
 }
 
@@ -532,7 +529,7 @@ export class OrbCascadeGame {
     // second catch in a row).
     const { x, y } = orb.container.position;
 
-    spawnBurst(this.fxLayer, this.particles, x, y, ORB_COLORS[ci]!, glowCol);
+    spawnBurst(this.fxLayer, this.particles, x, y, glowCol);
 
     orb.container.parent?.removeChild(orb.container);
     orb.container.destroy();
@@ -586,8 +583,6 @@ export class OrbCascadeGame {
   // ── Combo Flash ───────────────────────────────────────────────────────────
 
   private spawnComboFlash(x: number, y: number, combo: number, color: number) {
-    const g = new Graphics();
-    // Draw a glowing text-like pill
     const label = `×${combo}`;
     const style = new TextStyle({
       fontFamily: "Fraunces, serif",
@@ -606,29 +601,19 @@ export class OrbCascadeGame {
     txt.position.set(x, y - 20);
     this.fxLayer.addChild(txt);
 
-    const flash: ComboFlash = { gfx: g, life: 1 };
-    // Attach text to the gfx container for lifecycle management
-    (flash as unknown as { txt: Text }).txt = txt;
-    this.comboFlashes.push(flash);
+    this.comboFlashes.push({ txt, life: 1 });
   }
 
   private updateComboFlashes(dt: number) {
     for (let i = this.comboFlashes.length - 1; i >= 0; i--) {
       const f = this.comboFlashes[i]!;
       f.life -= dt * 1.8;
-      const txt = (f as unknown as { txt: Text }).txt as Text | undefined;
-      if (txt) {
-        txt.position.y -= 40 * dt;
-        txt.alpha = Math.max(0, f.life);
-        txt.scale.set(0.8 + 0.2 * (1 - f.life));
-      }
+      f.txt.position.y -= 40 * dt;
+      f.txt.alpha = Math.max(0, f.life);
+      f.txt.scale.set(0.8 + 0.2 * (1 - f.life));
       if (f.life <= 0) {
-        if (txt) {
-          txt.parent?.removeChild(txt);
-          txt.destroy();
-        }
-        f.gfx.parent?.removeChild(f.gfx);
-        f.gfx.destroy();
+        f.txt.parent?.removeChild(f.txt);
+        f.txt.destroy();
         this.comboFlashes.splice(i, 1);
       }
     }
