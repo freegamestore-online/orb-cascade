@@ -11,8 +11,8 @@ importers:
   web:
     dependencies:
       '@freegamestore/games':
-        specifier: ^0.14.0
-        version: 0.14.0(react@19.2.6)
+        specifier: ^0.16.0
+        version: 0.16.0(react@19.2.6)
       pixi.js:
         specifier: ^8
         version: 8.18.1
@@ -289,8 +289,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@freegamestore/games@0.14.0':
-    resolution: {integrity: sha512-RBtM4BnozuIVShDx5809aCPltc2ev2wp9jQTSh0lB6VxeLUBPqPtkBAm4Mk45tfgtX+kxdWDwasBy6GRrXfYGg==}
+  '@freegamestore/games@0.16.0':
+    resolution: {integrity: sha512-1gQ1zqCJ1O4MyIXbdSFg7Hv1j6Gq6TZiw2eQy4cth0CJe2rbxoNkvzjE4ZVZZ4b9OjZV8IlLdux6tsGEkzYUAw==}
     engines: {node: '>=22'}
     peerDependencies:
       react: ^19.0.0
@@ -1094,7 +1094,7 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@freegamestore/games@0.14.0(react@19.2.6)':
+  '@freegamestore/games@0.16.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
 
