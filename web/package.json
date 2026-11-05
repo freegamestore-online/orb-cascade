@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@freegamestore/games": "^0.14.0",
     "pixi.js": "^8",
     "react": "^19",
     "react-dom": "^19"

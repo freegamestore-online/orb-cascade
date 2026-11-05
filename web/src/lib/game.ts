@@ -16,8 +16,9 @@ export interface GameCallbacks {
   onPhaseChange: (phase: Phase) => void;
   onScoreChange: (score: number) => void;
   onLivesChange: (lives: number) => void;
-  onComboChange: (combo: number) => void;
   onHighScore: (score: number) => void;
+  onCatch: () => void;
+  onMiss: () => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const SPAWN_MIN = 0.45;
 const BASKET_W = 90;
 const BASKET_H = 28;
 const BASKET_SPEED = 480;   // px/s keyboard
+const MOVE_KEYS = ["ArrowLeft", "ArrowRight", "a", "A", "d", "D"];
 const ORB_RADIUS = 18;
 
 const ORB_COLORS = [0xff4dff, 0x4dffff, 0xffff4d, 0x4dff88, 0xff6b4d, 0x4d88ff];
@@ -242,6 +244,14 @@ export class OrbCascadeGame {
   // Input
   private keys: Record<string, boolean> = {};
   private pointerTargetX: number | null = null;
+  private onKeyDown = (e: KeyboardEvent) => this.onKey(e, true);
+  private onKeyUp = (e: KeyboardEvent) => this.onKey(e, false);
+  private onResize = (w: number, h: number) => {
+    for (const s of this.stars) s.gfx.position.set(randomBetween(0, w), randomBetween(0, h));
+  };
+
+  // Pause
+  private paused = false;
 
   // Ticker
   private tickerFn!: (ticker: Ticker) => void;
@@ -305,21 +315,25 @@ export class OrbCascadeGame {
 
   // ── Input ──────────────────────────────────────────────────────────────────
 
+  private onKey(e: KeyboardEvent, down: boolean) {
+    this.keys[e.key] = down;
+    // Keyboard takes over from the pointer until the pointer moves again
+    if (down && MOVE_KEYS.includes(e.key)) this.pointerTargetX = null;
+    if (down && (e.key === " " || e.key === "Enter")) {
+      if (this.phase === "menu" || this.phase === "over") this.startGame();
+    }
+  }
+
   private setupInput() {
-    const onKey = (e: KeyboardEvent, down: boolean) => {
-      this.keys[e.key] = down;
-      if (down && (e.key === " " || e.key === "Enter")) {
-        if (this.phase === "menu" || this.phase === "over") this.startGame();
-      }
-    };
-    window.addEventListener("keydown", (e) => onKey(e, true));
-    window.addEventListener("keyup", (e) => onKey(e, false));
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
+    this.app.renderer.on("resize", this.onResize);
 
     this.app.stage.eventMode = "static";
     this.app.stage.hitArea = this.app.screen;
 
     this.app.stage.on("pointermove", (e: FederatedPointerEvent) => {
-      if (this.phase === "playing") {
+      if (this.phase === "playing" && !this.paused) {
         const local = e.getLocalPosition(this.app.stage);
         this.pointerTargetX = local.x;
       }
@@ -327,6 +341,7 @@ export class OrbCascadeGame {
 
     this.app.stage.on("pointerdown", (e: FederatedPointerEvent) => {
       if (this.phase === "playing") {
+        if (this.paused) return;
         const local = e.getLocalPosition(this.app.stage);
         this.pointerTargetX = local.x;
       } else if (this.phase === "menu" || this.phase === "over") {
@@ -369,6 +384,7 @@ export class OrbCascadeGame {
     this.spawnInterval = SPAWN_BASE;
     this.elapsed = 0;
     this.pointerTargetX = null;
+    this.paused = false;
 
     const { width, height } = this.app.screen;
     this.basketX = width / 2;
@@ -378,7 +394,6 @@ export class OrbCascadeGame {
 
     this.callbacks.onScoreChange(0);
     this.callbacks.onLivesChange(MAX_LIVES);
-    this.callbacks.onComboChange(0);
 
     this.clearOrbs();
     this.clearParticles();
@@ -407,7 +422,7 @@ export class OrbCascadeGame {
   private update(dt: number) {
     this.animateStars(dt);
 
-    if (this.phase === "playing") {
+    if (this.phase === "playing" && !this.paused) {
       this.updateBasket(dt);
       this.updateSpawner(dt);
       this.updateOrbs(dt);
@@ -528,7 +543,7 @@ export class OrbCascadeGame {
     this.spawnInterval = Math.max(SPAWN_MIN, SPAWN_BASE - this.totalCaught * 0.03);
 
     this.callbacks.onScoreChange(this.score);
-    this.callbacks.onComboChange(this.combo);
+    this.callbacks.onCatch();
 
     // Combo flash text
     if (this.combo >= 2) {
@@ -548,7 +563,7 @@ export class OrbCascadeGame {
     this.combo = 0;
     this.lives--;
     this.callbacks.onLivesChange(this.lives);
-    this.callbacks.onComboChange(0);
+    this.callbacks.onMiss();
 
     // Red flash
     this.screenFlash = 0.38;
@@ -653,9 +668,14 @@ export class OrbCascadeGame {
     return this.highScore;
   }
 
+  setPaused(paused: boolean) {
+    this.paused = paused;
+  }
+
   destroy() {
     this.app.ticker.remove(this.tickerFn);
-    window.removeEventListener("keydown", () => {});
-    window.removeEventListener("keyup", () => {});
+    this.app.renderer.off("resize", this.onResize);
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
   }
 }
